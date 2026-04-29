@@ -67,19 +67,23 @@ class Participante extends Model
     {
         static::creating(function ($participante) {
             // 1. Asignar el creador automáticamente
-            $participante->created_by = auth()->id();
+            $participante->created_by = auth()->id() ?? 1;
 
-            // 2. Lógica para el Folio (Ejemplo: MAYO26- y un número aleatorio o ID)
-            // Nota: Como el ID aún no existe antes de crear, usamos un string único
+            // 2. Generar UUID primero (lo necesitamos para el QR)
+            $participante->uudd = (string) Str::uuid();
+
+
+            // 3. Generar Folio ÚNICO con reintento automático
             $year = now()->format('Y');
-            $participante->folio = "SNTE56-CPM-{$year}-" . strtoupper(bin2hex(random_bytes(3)));
+            do {
+                $nuevoFolio = "SNTE56-CPM-{$year}-" . strtoupper(bin2hex(random_bytes(3)));
+                // Verificamos si este folio ya existe en la tabla
+                $existe = static::where('folio', $nuevoFolio)->exists();
+            } while ($existe);
+            $participante->folio = $nuevoFolio;
 
-            // 4. Lógica para UUDD 
-             $participante->uudd = (string) Str::uuid();
-
-            // 3. Lógica para el Código QR
-            // Aquí podrías guardar la URL que validará la constancia más tarde
-            $participante->codigo_qr = url("/validar/{$participante->uudd}");
+            // 4. Generar la URL del QR
+            $participante->codigo_qr = url("/validar/{$participante->uudd}");            
 
         });
     }    

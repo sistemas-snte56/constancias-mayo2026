@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombres');
             $table->string('apellido_paterno');
             $table->string('apellido_materno')->nullable();
-            $table->string('rfc', 13)->unique();
+            $table->string('rfc')->nullable();
             $table->enum('genero', ['H', 'M', 'O']);
             $table->string('telefono')->nullable();
             $table->string('email')->nullable();

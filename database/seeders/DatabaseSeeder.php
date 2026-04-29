@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -18,8 +19,12 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
+        User::create([
+            'name' => 'Vicente Júarez Alarcón',
+            'email' => 'admin@email.com',
+            'password' => bcrypt('password2026'),
+        ]);
 
-        
         $this->call([
             RolSeeder::class,
             RegionSeeder::class,
