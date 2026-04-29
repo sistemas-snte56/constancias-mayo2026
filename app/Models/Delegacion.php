@@ -29,5 +29,13 @@ class Delegacion extends Model
     public function nivel(): BelongsTo
     {
         return $this->belongsTo(Nivel::class, 'nivel_id');
-    }    
+    }  
+    
+    /**
+     * Se obtiene el nombre completo de la delegacion y se utiliaza para mostrarlo en el select de la relacion con los participantes
+     */
+    public function getNombreCompletoAttribute()
+    {
+        return "{$this->delegacion} - {$this->sede}";
+    }       
 }
