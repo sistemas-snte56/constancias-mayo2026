@@ -79,6 +79,9 @@ class ParticipantesTable
             ->filters([
                 //
             ])
+            
+            ->recordUrl(null)
+
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
