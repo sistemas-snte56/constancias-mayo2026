@@ -25,6 +25,7 @@ class Participante extends Model
         'delegacion_id',
         'created_by',
         'status',
+        'descargado_at',
     ];
 
     /**
@@ -88,5 +89,8 @@ class Participante extends Model
         });
     }    
 
+    protected $casts = [
+        'descargado_at' => 'datetime',
+    ];
 
 }
