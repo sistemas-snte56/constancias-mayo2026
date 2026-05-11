@@ -66,6 +66,24 @@
             font-size: 8pt;
             color: #666;
         }
+
+
+        .qr-box {
+position: fixed; 
+    /* Ajusta estos valores si ves que se sale del recuadro blanco */
+    bottom: 35px;    
+    left: 41px;      
+    width: 105px;    /* Un poquito más pequeño para que respete los márgenes del cuadro blanco */
+    height: 160px;
+    z-index: 1000;   /* Asegura que esté por encima de todo */
+}
+
+.qr-box img {
+    display: block;
+}
+
+
+
     </style>
 </head>
 <body>
@@ -96,6 +114,15 @@
             {{ $participante->apellido_materno }}
         </div>
 
+    </div>
+
+    <!-- QR CODE
+    <div class="qr-container">
+        <img src="data:image/svg+xml;base64,{{ $qrCode }}" width="100" height="100">
+    </div> -->
+
+    <div class="qr-box">
+        <img src="data:image/svg+xml;base64,{{ $qrCode }}" width="110" height="110">
     </div>
 
 </body>

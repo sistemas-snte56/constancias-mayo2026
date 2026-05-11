@@ -4,9 +4,11 @@ use App\Livewire\ConsultaParticipante;
 use App\Models\Participante;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Route;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 Route::get('/', function () {
-    return view('welcome');
+    // return view('welcome');
+    return redirect()->route('public.consulta');
 });
 
 // 1. EL BUSCADOR (Livewire)
@@ -21,12 +23,13 @@ Route::get('/validar/{uudd}', function ($uudd) {
     
     // Aquí podrías redirigir al buscador pero ya con el resultado cargado,
     // o simplemente mostrar una vista sencilla de validación.
-    return view('public.resultado_qr', compact('participante'));
+    return view('validar.resultado_qr', compact('participante'));
 })->name('validar.constancia');
 
 // 3. LA DESCARGA (El "motor" del PDF)
 // Solo se activa cuando el usuario ya se encontró y le da clic al botón.
 Route::get('/descargar-constancia/{uudd}', function ($uudd) {
+    
     // 1. Buscamos al participante
     $participante = Participante::where('uudd', $uudd)
         ->where('status', 'aprobado')
@@ -39,14 +42,25 @@ Route::get('/descargar-constancia/{uudd}', function ($uudd) {
             'descargado_at' => now(),
         ]);
     }
+
+
+    // 3. Generar el QR ---
+    $qrCode = base64_encode(QrCode::format('png')
+        ->size(150)
+        ->margin(1)
+        ->errorCorrection('H')
+        ->generate(route('validar.constancia', $participante->uudd)));
+
+            
+
+
+
     
     // 3. Generamos y entregamos el PDF (Tu código actual)
-    $pdf = Pdf::loadView('pdf.constancia', compact('participante'))
+    $pdf = Pdf::loadView('pdf.constancia', compact('participante', 'qrCode'))
         ->setPaper('letter', 'portrait'); // Carta Vertical
 
     return $pdf->stream($participante->nombres . '-' . $participante->apellido_paterno . '-' . $participante->apellido_materno . '.pdf');
 
-    // Por ahora lo dejamos como un mensaje para que no te dé error de PDF
-    // return "Preparando archivo para: " . $participante->nombres;
 })->name('constancia.descargar');
     

@@ -6,10 +6,12 @@ use App\Filament\Resources\Participantes\ParticipanteResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Filament\Support\Enums\Width;
 
 class ListParticipantes extends ListRecords
 {
     protected static string $resource = ParticipanteResource::class;
+    protected Width|string|null $maxContentWidth = Width::Full;
 
     protected function getHeaderActions(): array
     {
@@ -48,4 +50,5 @@ class ListParticipantes extends ListRecords
             CreateAction::make(),
         ];
     }
+    
 }

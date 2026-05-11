@@ -9,7 +9,7 @@ class ConsultaParticipante extends Component
 {
 
     public $numero_personal = '';
-    public $participante;
+    public $participante='';
     public $busqueda_realizada = false;
 
     public function buscarParticipante()
