@@ -1,9 +1,5 @@
-<div class="min-h-screen bg-gray-100 flex flex-col">
-
-    <header class="bg-[#89194b] text-white p-4 shadow-md">
-        Sistema Institucional
-    </header>
-
+<div class="w-full max-w-2xl mx-auto mt-5 mb-5 px-4 py-4 sm:px-6 rounded-xl overflow-hidden">
+    
     <main class="flex-1 flex items-center justify-center">
 
         <div class="bg-white shadow-xl rounded-xl p-6 border-t-8 border-[#9d2449]">
@@ -102,15 +98,6 @@
 
     </main>
 
-    <footer class="bg-[#89194b] text-white p-3 text-center  px-6 py-3 text-xs md:text-sm">
-        Derechos reservados © ® 2026 | 
-        Sindicato Nacional de Trabajadores de la Educación Sección 56 |
-        José María Pino Suárez No. 04, Col. Centro. C.P. 94100, Xalapa, Veracruz, México. |
-        
-        <a href="/aviso-privacidad" 
-           class="underline hover:text-[#ff5608] transition">
-            Aviso de privacidad
-        </a>
-    </footer>
+
 
 </div>
