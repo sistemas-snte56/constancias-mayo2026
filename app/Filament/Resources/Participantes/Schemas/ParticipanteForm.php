@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\Participantes\Schemas;
 
+use App\Models\Delegacion;
+use App\Models\Region;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 
@@ -61,24 +64,71 @@ class ParticipanteForm
                         'required' => 'El número de personal es obligatorio.',
                         'unique' => 'Este número de personal ya está registrado.',
                     ]),
-                Select::make('delegacion_id')
-                    ->label('Delegación')
+
+                // Select de Region
+                Select::make('region_id')
+                    ->required()
+                    ->label('Región')
+                    ->placeholder('Selecciona una región')
+                    ->options( fn() => Region::orderBy('id')->pluck('nombre', 'id')->toArray())
                     ->searchable()
-                    ->getSearchResultsUsing(function (string $search) {
-                        return \App\Models\Delegacion::query()
-                            ->where('delegacion', 'like', "%{$search}%")
-                            ->orWhere('sede', 'like', "%{$search}%")
-                            ->limit(50)
+                    ->dehydrated(false) // No se guarda directamente en el modelo, es solo para filtrar las delegaciones
+                    ->live()
+                    ->afterStateUpdated( fn (Set $set) => $set('delegacion_id', null) ),
+
+                // 2. Selección de Delegación
+                Select::make('delegacion_id')
+                    ->label('Delegación Correspondiente')
+                    ->options(function (callable $get) {
+                        $regionId = $get('region_id');
+
+                        if (!$regionId) {
+                            return [];
+                        }
+
+                        return Delegacion::with('nivel') // 👈 cargar relación
+                            ->where('region_id', $regionId)
+                            ->orderBy('delegacion')
                             ->get()
-                            ->mapWithKeys(fn ($record) => [
-                                $record->id => $record->delegacion . ' - ' . ($record->sede ?? 'Sin sede'),
-                            ])
+                            ->mapWithKeys(function ($delegacion) {
+                                return [
+                                    $delegacion->id => $delegacion->nombre_completo
+                                ];
+                            })
                             ->toArray();
                     })
-                    ->getOptionLabelUsing(fn ($value) =>
-                        \App\Models\Delegacion::find($value)?->nombre_completo
-                    )
-                    ->required(),
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->live()
+                    ->disabled( fn (callable $get) => !$get('region_id') ),
+
+
+
+
+
+
+                    
+
+
+                // Select::make('delegacion_id')
+                //     ->label('Delegación')
+                //     ->searchable()
+                //     ->getSearchResultsUsing(function (string $search) {
+                //         return \App\Models\Delegacion::query()
+                //             ->where('delegacion', 'like', "%{$search}%")
+                //             ->orWhere('sede', 'like', "%{$search}%")
+                //             ->limit(50)
+                //             ->get()
+                //             ->mapWithKeys(fn ($record) => [
+                //                 $record->id => $record->delegacion . ' - ' . ($record->sede ?? 'Sin sede'),
+                //             ])
+                //             ->toArray();
+                //     })
+                //     ->getOptionLabelUsing(fn ($value) =>
+                //         \App\Models\Delegacion::find($value)?->nombre_completo
+                //     )
+                //     ->required(),
                 Hidden::make('status')
                     ->default('pendiente')
                     ->required(),
