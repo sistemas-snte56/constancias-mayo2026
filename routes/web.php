@@ -23,7 +23,7 @@ Route::get('/validar/{uudd}', function ($uudd) {
     
     // Aquí podrías redirigir al buscador pero ya con el resultado cargado,
     // o simplemente mostrar una vista sencilla de validación.
-    return view('validar.resultado_qr', compact('participante'));
+    return view('validar.resultados_qr', compact('participante'));
 })->name('validar.constancia');
 
 // 3. LA DESCARGA (El "motor" del PDF)
@@ -45,7 +45,7 @@ Route::get('/descargar-constancia/{uudd}', function ($uudd) {
 
 
     // 3. Generar el QR ---
-    $qrCode = base64_encode(QrCode::format('png')
+    $qrCode = base64_encode(QrCode::format('svg')
         ->size(150)
         ->margin(1)
         ->errorCorrection('H')
