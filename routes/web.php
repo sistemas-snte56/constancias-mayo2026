@@ -20,6 +20,12 @@ Route::get('/consulta', ConsultaParticipante::class)->name('public.consulta');
 Route::get('/validar/{uudd}', function ($uudd) {
     // Buscamos al participante
     $participante = Participante::where('uudd', $uudd)->firstOrFail();
+
+    // Si NO existe, mostramos la vista de error que acabamos de crear.
+    if (!$participante) {
+        // return view('validar.error_qr');
+        return response()->view('validar.error_qr', [], 404);
+    }
     
     // Aquí podrías redirigir al buscador pero ya con el resultado cargado,
     // o simplemente mostrar una vista sencilla de validación.
