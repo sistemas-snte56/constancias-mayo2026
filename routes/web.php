@@ -6,67 +6,67 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Route;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
+/*
+|--------------------------------------------------------------------------
+| Ruta Raíz
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/', function () {
-    // return view('welcome');
     return redirect()->route('public.consulta');
 });
 
-// 1. EL BUSCADOR (Livewire)
-// Esta es la página principal que verán los maestros para buscarse.
-Route::get('/consulta', ConsultaParticipante::class)->name('public.consulta');
+/*
+|--------------------------------------------------------------------------
+| Rutas Públicas
+|--------------------------------------------------------------------------
+*/
 
-// 2. EL QR (Validación directa)
-// Esta ruta es la que escanean; los manda directo al resultado sin buscar.
+// 1. Buscador principal (Livewire) — los maestros se buscan aquí
+Route::get('/consulta', ConsultaParticipante::class)
+    ->name('public.consulta');
+
+// 2. Validación por QR — ruta que escanea el QR y muestra resultado directo
 Route::get('/validar/{uudd}', function ($uudd) {
-    // Buscamos al participante
-    $participante = Participante::where('uudd', $uudd)->firstOrFail();
+    $participante = Participante::where('uudd', $uudd)->first();
 
-    // Si NO existe, mostramos la vista de error que acabamos de crear.
     if (!$participante) {
-        // return view('validar.error_qr');
         return response()->view('validar.error_qr', [], 404);
     }
-    
-    // Aquí podrías redirigir al buscador pero ya con el resultado cargado,
-    // o simplemente mostrar una vista sencilla de validación.
+
     return view('validar.resultados_qr', compact('participante'));
 })->name('validar.constancia');
 
-// 3. LA DESCARGA (El "motor" del PDF)
-// Solo se activa cuando el usuario ya se encontró y le da clic al botón.
+// 3. Descarga de constancia en PDF
 Route::get('/descargar-constancia/{uudd}', function ($uudd) {
-    
-    // 1. Buscamos al participante
+    // Buscar participante aprobado
     $participante = Participante::where('uudd', $uudd)
         ->where('status', 'aprobado')
         ->firstOrFail();
 
-    // 2. EL TRIGGER: ¿Es la primera vez que entra?
+    // Registrar primera descarga
     if (is_null($participante->descargado_at)) {
-        // Anotamos la fecha y hora exacta de este momento
-        $participante->update([
-            'descargado_at' => now(),
-        ]);
+        $participante->update(['descargado_at' => now()]);
     }
 
+    // Generar QR en base64
+    $qrCode = base64_encode(
+        QrCode::format('svg')
+            ->size(150)
+            ->margin(1)
+            ->errorCorrection('H')
+            ->generate(route('validar.constancia', $participante->uudd))
+    );
 
-    // 3. Generar el QR ---
-    $qrCode = base64_encode(QrCode::format('svg')
-        ->size(150)
-        ->margin(1)
-        ->errorCorrection('H')
-        ->generate(route('validar.constancia', $participante->uudd)));
-
-            
-
-
-
-    
-    // 3. Generamos y entregamos el PDF (Tu código actual)
+    // Generar y entregar PDF
     $pdf = Pdf::loadView('pdf.constancia', compact('participante', 'qrCode'))
-        ->setPaper('letter', 'portrait'); // Carta Vertical
+        ->setPaper('letter', 'portrait');
 
-    return $pdf->stream($participante->nombres . '-' . $participante->apellido_paterno . '-' . $participante->apellido_materno . '.pdf');
+    $filename = implode('-', [
+        $participante->nombres,
+        $participante->apellido_paterno,
+        $participante->apellido_materno,
+    ]) . '.pdf';
 
+    return $pdf->stream($filename);
 })->name('constancia.descargar');
-    
