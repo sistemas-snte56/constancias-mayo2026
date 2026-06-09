@@ -74,7 +74,23 @@ class ParticipanteForm
                     ->searchable()
                     ->dehydrated(false) // No se guarda directamente en el modelo, es solo para filtrar las delegaciones
                     ->live()
-                    ->afterStateUpdated( fn (Set $set) => $set('delegacion_id', null) ),
+                    ->afterStateUpdated( fn (Set $set) => $set('delegacion_id', null) )
+                    
+                    // 👈 AQUÍ ESTÁ EL TRUCO PARA EL EDIT:
+                    ->afterStateHydrated(function (Set $set, $record) {
+                        if ($record && $record->delegacion_id) {
+                            // Buscamos a qué región pertenece la delegación guardada en este participante
+                            $regionId = Delegacion::where('id', $record->delegacion_id)->value('region_id');
+                            // Le inyectamos el ID de la región al Select para que no aparezca vacío
+                            $set('region_id', $regionId);
+                        }
+                    })
+                    
+                    
+                    
+                    
+                    
+                    ,
 
                 // 2. Selección de Delegación
                 Select::make('delegacion_id')
@@ -102,33 +118,6 @@ class ParticipanteForm
                     ->required()
                     ->live()
                     ->disabled( fn (callable $get) => !$get('region_id') ),
-
-
-
-
-
-
-                    
-
-
-                // Select::make('delegacion_id')
-                //     ->label('Delegación')
-                //     ->searchable()
-                //     ->getSearchResultsUsing(function (string $search) {
-                //         return \App\Models\Delegacion::query()
-                //             ->where('delegacion', 'like', "%{$search}%")
-                //             ->orWhere('sede', 'like', "%{$search}%")
-                //             ->limit(50)
-                //             ->get()
-                //             ->mapWithKeys(fn ($record) => [
-                //                 $record->id => $record->delegacion . ' - ' . ($record->sede ?? 'Sin sede'),
-                //             ])
-                //             ->toArray();
-                //     })
-                //     ->getOptionLabelUsing(fn ($value) =>
-                //         \App\Models\Delegacion::find($value)?->nombre_completo
-                //     )
-                //     ->required(),
                 Hidden::make('status')
                     ->default('pendiente')
                     ->required(),

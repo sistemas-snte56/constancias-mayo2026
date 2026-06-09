@@ -47,7 +47,7 @@ class ListParticipantes extends ListRecords
                 }
             }),
 
-            CreateAction::make(),
+            CreateAction::make()->slideOver(),
         ];
     }
     

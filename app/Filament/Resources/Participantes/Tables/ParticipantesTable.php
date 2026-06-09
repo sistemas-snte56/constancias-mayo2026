@@ -21,6 +21,10 @@ use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Builder;
 
+use Filament\Tables\Actions\CreateAction;
+
+
+
 
 
 class ParticipantesTable
@@ -29,8 +33,9 @@ class ParticipantesTable
     {
         return $table
             ->columns([
-
-
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
                 TextColumn::make('nombre_completo')
                     ->label('Nombre')
                     ->searchable(query: function ($query, $search) {
@@ -38,23 +43,17 @@ class ParticipantesTable
                             ->orWhere('apellido_paterno', 'like', "%{$search}%")
                             ->orWhere('apellido_materno', 'like', "%{$search}%");
                     }),
+                // TextColumn::make('rfc')
+                //     ->label('RFC')
+                //     ->toggleable(isToggledHiddenByDefault: true)
+                //     ->searchable(),
 
-
-
-
-
-
-                TextColumn::make('rfc')
-                    ->label('RFC')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
-
-                TextColumn::make('telefono')
-                    ->label('Teléfono')
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email')
-                    ->searchable(),
+                // TextColumn::make('telefono')
+                //     ->label('Teléfono')
+                //     ->searchable(),
+                // TextColumn::make('email')
+                //     ->label('Email')
+                //     ->searchable(),
                 TextColumn::make('numero_personal')
                     ->label('Número de Personal')
                     ->searchable(),
@@ -74,6 +73,7 @@ class ParticipantesTable
                         default => null,
                     })
                     ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Estado'),
 
                 TextColumn::make('descargado_at')
@@ -89,6 +89,7 @@ class ParticipantesTable
                         null => 'heroicon-o-clock',
                         default => 'heroicon-o-check-circle',
                     })
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
 
 
@@ -118,13 +119,6 @@ class ParticipantesTable
                         true: fn($query) => $query->whereNotNull('descargado_at'),
                         false: fn($query) => $query->whereNull('descargado_at'),
                     ),
-
-
-
-
-
-
-
                 Filter::make('region_delegacion')
                     ->form([
                         Select::make('region_id')
@@ -139,10 +133,14 @@ class ParticipantesTable
                                 $regionId = $get('region_id');
 
                                 if (!$regionId) {
-                                    return \App\Models\Delegacion::pluck('delegacion', 'id');
+                                    return \App\Models\Delegacion::query()
+                                        ->orderBy('delegacion')
+                                        ->pluck('delegacion', 'id');
                                 }
 
-                                return \App\Models\Delegacion::where('region_id', $regionId)
+                                return \App\Models\Delegacion::query()
+                                    ->where('region_id', $regionId)
+                                    ->orderBy('delegacion')
                                     ->pluck('delegacion', 'id');
                             })
                             ->live(),
@@ -175,40 +173,11 @@ class ParticipantesTable
 
                         return $indicators;
                     }),
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             ])
             ->recordUrl(null)
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ViewAction::make()->slideOver(),
+                EditAction::make()->slideOver(),
             ])
             ->actions([
                 // Acción personalizada para aprobar
@@ -226,7 +195,7 @@ class ParticipantesTable
                             ->success()
                             ->send();
                     }),
-                EditAction::make(),
+                EditAction::make()->slideOver(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -256,6 +225,8 @@ class ParticipantesTable
                     DeleteBulkAction::make(),
                 ]),
             ])
+
+            
             ->modifyQueryUsing(fn (Builder $query) => $query->orderBy(        // 👈 aquí
                 \App\Models\Delegacion::select('delegacion')
                     ->whereColumn('delegaciones.id', 'participantes.delegacion_id'),

@@ -53,9 +53,9 @@ class ParticipanteResource extends Resource
     {
         return [
             'index' => ListParticipantes::route('/'),
-            'create' => CreateParticipante::route('/create'),
-            'view' => ViewParticipante::route('/{record}'),
-            'edit' => EditParticipante::route('/{record}/edit'),
+            // 'create' => CreateParticipante::route('/create'),
+            // 'view' => ViewParticipante::route('/{record}'),
+            // 'edit' => EditParticipante::route('/{record}/edit'),
         ];
     }
 

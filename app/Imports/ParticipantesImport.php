@@ -12,7 +12,7 @@ class ParticipantesImport implements ToModel, WithHeadingRow, WithValidation
 {
     public function model(array $row)
     {
-        // 1. Buscamos la delegación (tu lógica actual se mantiene)
+        // 1. Buscamos la delegación (tu lógica original e intacta)
         $nombreDeExcel = trim($row['delegacion'] ?? '');
         if (empty($nombreDeExcel)) return null;
 
@@ -22,22 +22,32 @@ class ParticipantesImport implements ToModel, WithHeadingRow, WithValidation
             throw new \Exception("La delegación '{$nombreDeExcel}' no existe.");
         }
 
-        // 2. Usamos updateOrCreate para evitar duplicados y errores
-        // El primer array busca por 'numero_personal'
-        // El segundo array actualiza o inserta los datos
+        // 2. Limpieza y asignación del número de personal
+        $numeroPersonal = trim($row['numero_personal'] ?? '');        
+
+        // Si la celda está vacía, generamos el TEMP único
+        if (empty($numeroPersonal)) {
+            do {
+                $numeroPersonal = 'TEMP-' . str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            } while (Participante::where('numero_personal', $numeroPersonal)->exists());
+        }
+
+        $genero = mb_strtoupper(trim($row['genero'] ?? ''), 'UTF-8');
+
+        // 3. Guardado/Actualización seguro
         return Participante::updateOrCreate(
-            ['numero_personal' => trim($row['numero_personal'])],
+            ['numero_personal' => $numeroPersonal], // <--- AQUÍ ESTABA EL ERROR. Ya usa la variable limpia y corregida.
             [
-                'nombres'           => trim($row['nombres']),
-                'apellido_paterno'  => trim($row['apellido_paterno']),
-                'apellido_materno'  => trim($row['apellido_materno'] ?? ''),
-                'rfc'               => strtoupper(trim($row['rfc'])),
-                'genero'            => (str_contains(strtoupper($row['genero'] ?? ''), 'MAS')) ? 'H' : 'M',
+                'nombres'           => mb_strtoupper(trim($row['nombres'] ?? ''), 'UTF-8'),
+                'apellido_paterno'  => mb_strtoupper(trim($row['apellido_paterno'] ?? ''), 'UTF-8'),
+                'apellido_materno'  => mb_strtoupper(trim($row['apellido_materno'] ?? ''), 'UTF-8'),
+                // Si no tiene RFC, guarda un null limpio
+                'rfc'               => !empty($row['rfc']) ? mb_strtoupper(trim($row['rfc']), 'UTF-8') : null,
+                // Traductor inteligente de género protegido para UTF-8
+                'genero'            => in_array($genero, ['H', 'M']) ? $genero : 'O',
                 'telefono'          => str_replace(' ', '', $row['telefono'] ?? ''),
                 'email'             => strtolower(trim($row['email'] ?? '')) ?: null,
                 'delegacion_id'     => $delegacion->id,
-                // Nota: No incluimos 'status' aquí para no resetear a 'pendiente' 
-                // a los que ya fueron aprobados manualmente en el panel.
             ]
         );
     }
@@ -45,8 +55,8 @@ class ParticipantesImport implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'numero_personal' => ['required'], // Quitamos el 'unique' para que no truene
-            'rfc'             => ['required'],
+            'numero_personal' => ['nullable'], // Permite que venga vacío para generar el TEMP
+            'rfc'             => ['nullable'], 
             'delegacion'      => ['required'],
             'nombres'         => ['required'],
             'apellido_paterno'=> ['required'],
