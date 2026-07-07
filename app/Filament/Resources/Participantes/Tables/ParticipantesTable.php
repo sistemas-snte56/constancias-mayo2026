@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Participantes\Tables;
 
-use App\Models\Delegacion;
-use App\Models\Participante;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -11,7 +9,6 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Collection;
@@ -21,11 +18,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Builder;
 
-use Filament\Tables\Actions\CreateAction;
-
-
-
-
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class ParticipantesTable
 {
@@ -226,11 +221,39 @@ class ParticipantesTable
                 ]),
             ])
 
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar')
+                    ->icon('heroicon-o-document-arrow-up')
+                    ->color('info')
+                    ->exports([
+                        ExcelExport::make()
+                            ->fromTable()
+                            ->withFilename('participantes_' . now()->format('Y-m-d_H-i-s') . '.xlsx')
+                            // ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
+                            ->withColumns([
+                                Column::make('id')->heading('ID'),
+                                Column::make('nombre_completo')->heading('Nombre Completo'),
+                                Column::make('rfc')->heading('RFC'),
+                                Column::make('genero')->heading('Género'),
+                                Column::make('telefono')->heading('Teléfono'),
+                                Column::make('email')->heading('Email'),
+                                Column::make('numero_personal')->heading('Número de Personal')->formatStateUsing(fn ($state) => "'" . $state),
+                                Column::make('delegacion.region.nombre')->heading('Región'),
+                                Column::make('delegacion.nombre_completo')->heading('Delegación'),
+                                Column::make('folio')->heading('Folio'),
+                            ])
+                    ])
+                    
+            ])
+
             
-            ->modifyQueryUsing(fn (Builder $query) => $query->orderBy(        // 👈 aquí
-                \App\Models\Delegacion::select('delegacion')
-                    ->whereColumn('delegaciones.id', 'participantes.delegacion_id'),
-                'asc'
-            ));
+            // ->modifyQueryUsing(fn (Builder $query) => $query->orderBy(        // 👈 aquí
+            //     \App\Models\Delegacion::select('delegacion')
+            //         ->whereColumn('delegaciones.id', 'participantes.delegacion_id'),
+            //     'asc'
+            // ));
+
+            ->defaultSort('created_at', 'asc'); // Ordena por fecha de creación descendente por defecto
     }
 }
